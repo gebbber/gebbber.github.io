@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>How Old Is Ashling?</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      background: black;
+      color: lime;
+      font-family: monospace;
+      font-size: 4vw;
+    }
+  </style>
+</head>
+<body>
+  <div id="age">Loading...</div>
+  <script>
+    function updateAge() {
+      const now = new Date();
+      const birthYear = 1982;
+      const birthMonth = 5; // June (0-based)
+      const birthDay = 8;
+
+      const thisYear = now.getFullYear();
+      const lastJune8 = new Date(thisYear, birthMonth, birthDay);
+      const nextJune8 = new Date(thisYear + 1, birthMonth, birthDay);
+
+      if (now < lastJune8) {
+        lastJune8.setFullYear(thisYear - 1);
+        nextJune8.setFullYear(thisYear);
+      }
+
+      const years = lastJune8.getFullYear() - birthYear;
+      const fraction = (now - lastJune8) / (nextJune8 - lastJune8);
+      const preciseAge = years + fraction;
+
+      document.getElementById('age').textContent = preciseAge.toFixed(9) + ' years';
+      requestAnimationFrame(updateAge);
+    }
+
+    updateAge();
+  </script>
+</body>
+</html>

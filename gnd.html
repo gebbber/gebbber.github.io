@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GND</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg0: #05060a;
+      --bg1: #0a0f1a;
+      --fg: #7df9ff;
+      --glow: rgba(125,249,255,0.7);
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(1200px 800px at 50% 50%, var(--bg1), var(--bg0));
+      color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    #wrap {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    #counter {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: clamp(24px, 8vw, 120px);
+      text-shadow: 0 0 18px var(--glow), 0 0 48px rgba(125,249,255,0.35);
+      z-index: 3; /* above emojis */
+      pointer-events: none;
+    }
+    #counter small {
+      font-size: 0.25em;
+      opacity: 0.9;
+      display: block;
+      letter-spacing: 0.12em;
+      margin-top: 0.25em;
+    }
+    .emoji {
+      position: absolute;
+      will-change: transform, top, left;
+      opacity: 0.2; /* more visible */
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
+      z-index: 1; /* under counter */
+      line-height: 1;
+      font-family: "Noto Color Emoji", sans-serif;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .emoji { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="counter">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div id="days">0.00000</div><div>days</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Counter
+    const startUTC = Date.parse('2025-09-01T00:00:00-06:00');
+    const MS_PER_DAY = 86400000;
+    const daysEl = document.getElementById('days');
+
+    // Emoji field
+    const EMOJIS = ['🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍺', '🍻'];
+    const COUNT = 40;
+    const particles = [];
+    const wrap = document.getElementById('wrap');
+
+    function mkParticle() {
+      const el = document.createElement('div');
+      el.className = 'emoji';
+      el.textContent = EMOJIS[Math.random() * EMOJIS.length | 0];
+
+      const sizeRem = 1 + Math.random() * 3.5;
+      el.style.fontSize = sizeRem + 'rem';
+
+      const p = {
+        el,
+        x: Math.random() * 100,  // percent of container width
+        y: Math.random() * 100,  // percent of container height
+        vx: (Math.random() - 0.5) * 20, // percent per second
+        vy: (Math.random() - 0.5) * 20,
+        rot: Math.random() * 360,
+        spin: (Math.random() - 0.5) * 180,
+      };
+      particles.push(p);
+      wrap.appendChild(el);
+      // initial paint
+      el.style.left = p.x + '%';
+      el.style.top  = p.y + '%';
+      el.style.transform = `rotate(${p.rot}deg)`;
+    }
+
+    for (let i = 0; i < COUNT; i++) mkParticle();
+
+    let raf = 0;
+    let lastTs = 0;
+
+    function step(ts) {
+      const dt = Math.min(((lastTs || ts) && (ts - lastTs)) / 1000 || 0, 0.05);
+      lastTs = ts;
+
+      // Counter update
+      const days = (Date.now() - startUTC) / MS_PER_DAY;
+      daysEl.textContent = days.toFixed(5);
+
+      // Particles update
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        let x = p.x + p.vx * dt;
+        let y = p.y + p.vy * dt;
+
+        // bounce
+        if (x < 0) { x = -x; p.vx = Math.abs(p.vx); p.spin = -p.spin; }
+        if (x > 100) { x = 200 - x; p.vx = -Math.abs(p.vx); p.spin = -p.spin; }
+        if (y < 0) { y = -y; p.vy = Math.abs(p.vy); p.spin = -p.spin; }
+        if (y > 100) { y = 200 - y; p.vy = -Math.abs(p.vy); p.spin = -p.spin; }
+
+        if (Math.abs(p.vx) < 1 && Math.abs(p.vy) < 1) p.vx = 6;
+
+        p.x = x; p.y = y;
+        p.rot = (p.rot + p.spin * dt) % 360;
+
+        // paint using percent-based positioning
+        const el = p.el;
+        el.style.left = p.x + '%';
+        el.style.top  = p.y + '%';
+        el.style.transform = `translate(-50%, -50%) rotate(${p.rot}deg)`;
+      }
+
+      raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { cancelAnimationFrame(raf); lastTs = 0; }
+      else { raf = requestAnimationFrame(step); }
+    });
+
+  </script>
+</body>
+</html>

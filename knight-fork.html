@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Fork Trainer</title>
+<style>
+  :root{
+    --bg: #1c2128;
+    --panel: #262c36;
+    --ink: #e8e6e1;
+    --muted: #8b94a3;
+    --light-sq: #e9dcc6;
+    --dark-sq: #7d6347;
+    --accent: #d8a443;
+    --good: #5fb87a;
+    --bad: #d9695f;
+    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    padding: 28px 16px 60px;
+  }
+
+  h1{
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    font-size: 1.8rem;
+  }
+  .accent { color: var(--accent); }
+
+  .subtitle{
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 22px;
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  .scoreboard{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid #3a4150;
+  }
+  .stat{
+    text-align: center;
+    padding: 0 10px;
+    min-width: 58px;
+  }
+  .stat + .stat { border-left: 1px solid #3a4150; }
+  .stat .value{
+    font-family: var(--mono);
+    font-size: 1.35rem;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .stat .label{
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .subscoreboard{
+    display: flex;
+    gap: 22px;
+    margin: -6px 0 18px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .subscoreboard .accent{
+    font-family: var(--mono);
+    margin-left: 4px;
+  }
+
+  .board-area{
+    display: flex;
+    align-items: flex-start;
+  }
+  .ranks{
+    display: flex;
+    flex-direction: column;
+  }
+  .ranks div{
+    width: 22px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .board-col{
+    display: flex;
+    flex-direction: column;
+  }
+  .files{
+    display: flex;
+  }
+  .files div{
+    width: 56px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  #board{
+    display: grid;
+    grid-template-columns: repeat(8, 56px);
+    grid-template-rows: repeat(8, 56px);
+    border: 4px solid #3a2f22;
+    border-radius: 4px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  .square{
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="16" y="25" font-size="26" text-anchor="middle" fill="white" stroke="black" stroke-width="1.5">&#9816;</text></svg>') 16 16, pointer;
+    position: relative;
+    transition: background-color 0.15s ease;
+  }
+  .square.light { background: var(--light-sq); }
+  .square.dark { background: var(--dark-sq); }
+
+  .square.correct { background: var(--good) !important; }
+  .square.incorrect { background: var(--bad) !important; }
+  .square.show-correct {
+    box-shadow: inset 0 0 0 4px var(--accent);
+  }
+
+  .piece{
+    font-size: 38px;
+    line-height: 1;
+    user-select: none;
+    pointer-events: none;
+  }
+  .piece-white { color: #fbf6ee; -webkit-text-stroke: 1.5px #2a2a2a; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .piece-black { color: #1c1c1c; }
+
+  .controls{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #skipBtn{
+    font-family: var(--serif);
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    padding: 12px 36px;
+    border-radius: 8px;
+    border: 1px solid #4a5366;
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  #skipBtn:hover { background: #303744; border-color: var(--accent); }
+  #skipBtn.correct { background: var(--good); border-color: var(--good); color: #102015; }
+  #skipBtn.incorrect { background: var(--bad); border-color: var(--bad); }
+  #skipBtn.show-correct { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+
+  #message{
+    min-height: 1.4em;
+    font-size: 0.95rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  #message.good { color: var(--good); }
+  #message.bad { color: var(--bad); }
+
+  @media (max-width: 480px){
+    #board{
+      grid-template-columns: repeat(8, 11.5vw);
+      grid-template-rows: repeat(8, 11.5vw);
+    }
+    .square{ width: 11.5vw; height: 11.5vw; }
+    .piece{ font-size: 7.5vw; }
+    .ranks div{ width: 5vw; height: 11.5vw; font-size: 0.7rem; }
+    .files div{ width: 11.5vw; height: 5vw; font-size: 0.7rem; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Knight Fork <span class="accent">Trainer</span></h1>
+  <p class="subtitle">
+    A king and a queen appear on the board, one of each color. Half the time
+    they're placed so some square forks both of them. Click any square a
+    knight could stand on to attack <em>both</em> pieces &mdash; or hit Skip
+    if no such square exists.
+  </p>
+
+  <div class="scoreboard">
+    <div class="stat">
+      <div class="value" id="points">0</div>
+      <div class="label">Points</div>
+    </div>
+    <div class="stat">
+      <div class="value" id="ppm">&ndash;</div>
+      <div class="label">Per Minute</div>
+    </div>
+    <div class="stat">
+      <div class="value" id="streak">0</div>
+      <div class="label">In a Row</div>
+    </div>
+  </div>
+
+  <div class="subscoreboard">
+    <span>Forks <span class="accent" id="forks">0/0</span></span>
+    <span>Skips <span class="accent" id="skips">0/0</span></span>
+  </div>
+
+  <div class="board-area">
+    <div class="ranks" id="ranks">
+      <div>8</div><div>7</div><div>6</div><div>5</div>
+      <div>4</div><div>3</div><div>2</div><div>1</div>
+    </div>
+    <div class="board-col">
+      <div id="board"></div>
+      <div class="files" id="files">
+        <div>a</div><div>b</div><div>c</div><div>d</div>
+        <div>e</div><div>f</div><div>g</div><div>h</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="skipBtn">No fork (space bar)</button>
+    <div id="message"></div>
+  </div>
+
+<script>
+  const boardEl = document.getElementById('board');
+  const skipBtn = document.getElementById('skipBtn');
+  const messageEl = document.getElementById('message');
+  const pointsEl = document.getElementById('points');
+  const ppmEl = document.getElementById('ppm');
+  const streakEl = document.getElementById('streak');
+  const forksEl = document.getElementById('forks');
+  const skipsEl = document.getElementById('skips');
+
+  let totalPoints = 0;
+  let streak = 0;
+  let forkCorrect = 0, forkTotal = 0;
+  let skipCorrect = 0, skipTotal = 0;
+  let startTime = Date.now();
+
+  let square1, color1, type1;
+  let square2 = null, color2, type2;
+  let forkSquares = [];
+  let answered = false;
+
+  const KNIGHT_OFFSETS = [
+    [1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]
+  ];
+
+  function randInt(n){ return Math.floor(Math.random() * n); }
+
+  function knightMoves(idx){
+    const row = Math.floor(idx / 8), col = idx % 8;
+    const moves = [];
+    for(const [dr, dc] of KNIGHT_OFFSETS){
+      const nr = row + dr, nc = col + dc;
+      if(nr >= 0 && nr < 8 && nc >= 0 && nc < 8) moves.push(nr * 8 + nc);
+    }
+    return moves;
+  }
+
+  const PIECE_CHARS = {
+    K: { white: '\u2654', black: '\u265A' },
+    Q: { white: '\u2655', black: '\u265B' },
+    R: { white: '\u2656', black: '\u265C' },
+    B: { white: '\u2657', black: '\u265D' },
+    N: { white: '\u2658', black: '\u265E' },
+    P: { white: '\u2659', black: '\u265F' }
+  };
+
+  function pieceChar(color, type){
+    return PIECE_CHARS[type][color];
+  }
+
+  function forkCommon(sqA, sqB){
+    const NA = knightMoves(sqA);
+    const NB = knightMoves(sqB);
+    return NA.filter(x => NB.includes(x) && x !== sqA && x !== sqB);
+  }
+
+  function moveSquareRandom(sq, steps){
+    let row = Math.floor(sq / 8), col = sq % 8;
+    for(let i = 0; i < steps; i++){
+      let dr, dc;
+      do {
+        dr = randInt(3) - 1;
+        dc = randInt(3) - 1;
+      } while(dr === 0 && dc === 0);
+      const nr = row + dr, nc = col + dc;
+      if(nr >= 0 && nr < 8 && nc >= 0 && nc < 8){
+        row = nr; col = nc;
+      }
+    }
+    return row * 8 + col;
+  }
+
+  function generatePuzzle(){
+    const wantFork = Math.random() < 0.5;
+
+    for(let attempt = 0; attempt < 200; attempt++){
+      square1 = randInt(64);
+      color1 = Math.random() < 0.5 ? 'white' : 'black';
+      type1 = Math.random() < 0.5 ? 'K' : 'Q';
+
+      const forkableSquares = [];
+      for(let sq = 0; sq < 64; sq++){
+        if(sq === square1) continue;
+        if(forkCommon(square1, sq).length > 0) forkableSquares.push(sq);
+      }
+      if(forkableSquares.length === 0) continue;
+
+      const sq2 = forkableSquares[randInt(forkableSquares.length)];
+
+      if(wantFork){
+        square2 = sq2;
+        forkSquares = forkCommon(square1, sq2);
+      } else {
+        let s1, s2, common;
+        let iterations = 0;
+
+        do {
+          iterations++;
+          const steps = randInt(4) + 1;
+          if(Math.random() < 0.5){
+            s1 = moveSquareRandom(square1, steps);
+            s2 = sq2;
+          } else {
+            s1 = square1;
+            s2 = moveSquareRandom(sq2, steps);
+          }
+          common = (s1 === s2) ? forkCommon(square1, sq2) : forkCommon(s1, s2);
+        } while(common.length > 0 && iterations < 500);
+
+        square1 = s1;
+        square2 = s2;
+        forkSquares = [];
+      }
+
+      color2 = color1 === 'white' ? 'black' : 'white';
+      type2 = type1 === 'K' ? 'Q' : 'K';
+      renderBoard();
+      return;
+    }
+  }
+
+  function renderBoard(){
+    boardEl.innerHTML = '';
+
+    for(let i = 0; i < 64; i++){
+      const row = Math.floor(i / 8), col = i % 8;
+      const cell = document.createElement('div');
+      cell.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+      cell.dataset.idx = i;
+
+      if(i === square1){
+        cell.innerHTML = `<span class="piece piece-${color1}">${pieceChar(color1, type1)}</span>`;
+      } else if(i === square2){
+        cell.innerHTML = `<span class="piece piece-${color2}">${pieceChar(color2, type2)}</span>`;
+      }
+
+      cell.addEventListener('click', () => handleSquareClick(i));
+      boardEl.appendChild(cell);
+    }
+  }
+
+  function handleSquareClick(idx){
+    if(answered) return;
+    answered = true;
+
+    const correct = forkSquares.includes(idx);
+    score(correct, 'fork');
+
+    if(!correct){
+      messageEl.textContent = forkSquares.length
+        ? 'Missed a fork.'
+        : 'There was no fork — should have hit Skip.';
+      messageEl.className = 'bad';
+    } else {
+      messageEl.textContent = 'Forked!';
+      messageEl.className = 'good';
+    }
+
+    nextPuzzle();
+  }
+
+  skipBtn.addEventListener('click', () => {    if(answered) return;
+    answered = true;
+
+    const correct = forkSquares.length === 0;
+    score(correct, 'skip');
+
+    if(!correct){
+      messageEl.textContent = 'There was a fork available.';
+      messageEl.className = 'bad';
+    } else {
+      messageEl.textContent = 'Correct — no fork available.';
+      messageEl.className = 'good';
+    }
+
+    nextPuzzle();
+  });
+
+  function score(correct, type){
+    if(correct){
+      totalPoints += 1;
+      streak += 1;
+    } else {
+      totalPoints -= 1;
+      streak = 0;
+    }
+
+    if(type === 'fork'){
+      forkTotal += 1;
+      if(correct) forkCorrect += 1;
+    } else {
+      skipTotal += 1;
+      if(correct) skipCorrect += 1;
+    }
+
+    updateStats();
+  }
+
+  function updateStats(){
+    pointsEl.textContent = totalPoints;
+    streakEl.textContent = streak;
+    forksEl.textContent = `${forkCorrect}/${forkTotal}`;
+    skipsEl.textContent = `${skipCorrect}/${skipTotal}`;
+
+    const elapsedMin = (Date.now() - startTime) / 60000;
+    if(elapsedMin < 0.05){
+      ppmEl.textContent = '\u2013';
+    } else {
+      ppmEl.textContent = (totalPoints / elapsedMin).toFixed(1);
+    }
+  }
+
+  function nextPuzzle(){
+    answered = false;
+    skipBtn.classList.remove('correct', 'incorrect', 'show-correct');
+    generatePuzzle();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' || e.key === ' '){
+      e.preventDefault();
+      skipBtn.click();
+    }
+  });
+
+  generatePuzzle();
+  updateStats();
+  setInterval(updateStats, 2000);
+</script>
+</body>
+</html>

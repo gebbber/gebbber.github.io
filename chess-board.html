@@ -3,128 +3,337 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Chess Square Identification Game</title>
+        <title>Chess Square ID</title>
         <style>
+            :root {
+                --bg: #f0ede8;
+                --text: #1a1a1a;
+                --text-muted: #777;
+                --surface: #fff;
+                --border: #d0ccc5;
+                --board-border: #aaa;
+                --pip-empty: #ccc;
+                --toggle-icon: color-mix(in oklch, #1aacc4 50%, black);
+            }
+            :root.dark {
+                --bg: #1c1c1c;
+                --text: #e0e0e0;
+                --text-muted: #888;
+                --surface: #282828;
+                --border: #3a3a3a;
+                --board-border: #3a3a3a;
+                --pip-empty: #3a3a3a;
+                --toggle-icon: color-mix(in oklch, white 50%, #df8020);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root:not(.light) {
+                    --bg: #1c1c1c;
+                    --text: #e0e0e0;
+                    --text-muted: #888;
+                    --surface: #282828;
+                    --border: #3a3a3a;
+                    --board-border: #3a3a3a;
+                    --pip-empty: #3a3a3a;
+                    --toggle-icon: color-mix(in oklch, white 50%, #df8020);
+                }
+            }
+
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+
             body {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                font-family: Arial, sans-serif;
+                justify-content: center;
+                min-height: 100vh;
+                background: var(--bg);
+                font-family: 'Segoe UI', Arial, sans-serif;
+                color: var(--text);
+                padding: 20px;
             }
-            #board {
-                display: grid;
-                grid-template-columns: repeat(8, 60px);
-                gap: 0;
+
+            h1 {
+                font-size: 1.4rem;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+                opacity: 0.6;
+                margin-bottom: 20px;
             }
-            #board-container {
-                margin: 20px 0;
+
+            #stats {
                 display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 0.25rem;
-                transition: transform 0.5s ease; /* Smooth rotation */
+                gap: 32px;
+                margin-bottom: 18px;
             }
-            #board-container.reversed {
-                transform: rotate(180deg);
+
+            .stat {
+                text-align: center;
+                min-width: 64px;
             }
-            .square {
-                width: 60px;
-                height: 60px;
+
+            .stat-value {
+                font-size: 2rem;
+                font-weight: 700;
+                line-height: 1;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: var(--text-muted);
+                margin-top: 3px;
+            }
+
+            #message-box {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 0 28px;
+                margin-bottom: 20px;
+                font-size: 1.35rem;
+                font-weight: 600;
+                width: 220px;
+                height: 50px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 2rem;
-                cursor: pointer;
-                color: transparent;
-                user-select: none;
             }
-            .white {
-                background-color: #eee;
+
+            #board-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                transition: transform 0.5s ease;
             }
-            .black {
-                background-color: #444;
+
+            #board-container.reversed { transform: rotate(180deg); }
+
+            .axis-label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                color: var(--text-muted);
+                font-weight: 600;
             }
-            .black.revealed {
-                color: white;
-            }
-            .white.revealed {
-                color: black;
-            }
-            #score,
-            #message {
-                font-size: 18px;
+
+            #board {
+                display: grid;
+                grid-template-columns: repeat(8, 62px);
+                border: 3px solid var(--board-border);
+                border-radius: 3px;
+                overflow: hidden;
             }
 
             #board-container.reversed .square,
-            #board-container.reversed #black-label,
-            #board-container.reversed #white-label {
+            #board-container.reversed .axis-label {
                 transform: rotate(180deg);
             }
+
+            .square {
+                width: 62px;
+                height: 62px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.72rem;
+                font-weight: 700;
+                cursor: pointer;
+                color: transparent;
+                user-select: none;
+                position: relative;
+            }
+
+            .light { background-color: #f0d9b5; }
+            .dark  { background-color: #b58863; }
+
+            .square.revealed      { color: rgba(0, 0, 0, 0.45); }
+            .dark.revealed        { color: rgba(255, 255, 255, 0.6); }
+
+            /* pseudo-element handles hover tint and flash — never touches layout */
+            .square::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                pointer-events: none;
+            }
+            .light::after { background: rgba(0, 0, 0, 0.06); }
+            .dark::after  { background: rgba(255, 255, 255, 0.1); }
+            .square:hover::after { opacity: 1; }
+
+            .square.flash-correct::after {
+                background: #4ade80;
+                animation: flash-overlay 0.5s ease forwards;
+            }
+            .square.flash-wrong::after {
+                background: #f87171;
+                animation: flash-overlay 0.45s ease forwards;
+            }
+
+            @keyframes flash-overlay {
+                0%   { opacity: 0.75; }
+                100% { opacity: 0; }
+            }
+
+            #pip-bar {
+                display: flex;
+                gap: 5px;
+                margin-top: 14px;
+            }
+
+            .pip {
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: var(--pip-empty);
+            }
+            .pip.correct { background: #4ade80; }
+            .pip.wrong   { background: #f87171; }
         </style>
     </head>
     <body>
-        <h1>Chess Square Identification Game</h1>
-        <div id="score">Score: 0/0</div>
-        <div id="message">Click on:</div>
-        <div id="board-container">
-            <div id="black-label">Black</div>
-            <div id="board"></div>
-            <div id="white-label">White</div>
+        <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" style="position:fixed;top:12px;right:14px;background:none;border:none;padding:4px;cursor:pointer;color:var(--toggle-icon);border-radius:4px;display:flex;align-items:center;justify-content:center">
+            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" width="20" height="20">
+                <path d="M13.5025,5.4136A15.0755,15.0755,0,0,0,25.096,23.6082a11.1134,11.1134,0,0,1-7.9749,3.3893c-.1385,0-.2782.0051-.4178,0A11.0944,11.0944,0,0,1,13.5025,5.4136M14.98,3a1.0024,1.0024,0,0,0-.1746.0156A13.0959,13.0959,0,0,0,16.63,28.9973c.1641.006.3282,0,.4909,0a13.0724,13.0724,0,0,0,10.702-5.5556,1.0094,1.0094,0,0,0-.7833-1.5644A13.08,13.08,0,0,1,15.8892,4.38,1.0149,1.0149,0,0,0,14.98,3Z"/>
+                <rect width="32" height="32" fill="none"/>
+            </svg>
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" width="20" height="20" style="display:none">
+                <rect x="15" y="2" width="2" height="5"/>
+                <rect x="21.6675" y="6.8536" width="4.958" height="1.9998" transform="translate(1.5191 19.3744) rotate(-45)"/>
+                <rect x="25" y="15" width="5" height="2"/>
+                <rect x="23.1466" y="21.6675" width="1.9998" height="4.958" transform="translate(-10.0018 24.1465) rotate(-45)"/>
+                <rect x="15" y="25" width="2" height="5"/>
+                <rect x="5.3745" y="23.1466" width="4.958" height="1.9998" transform="translate(-14.7739 12.6256) rotate(-45)"/>
+                <rect x="2" y="15" width="5" height="2"/>
+                <rect x="6.8536" y="5.3745" width="1.9998" height="4.958" transform="translate(-3.253 7.8535) rotate(-45)"/>
+                <path d="M16,12a4,4,0,1,1-4,4,4.0045,4.0045,0,0,1,4-4m0-2a6,6,0,1,0,6,6,6,6,0,0,0-6-6Z"/>
+                <rect width="32" height="32" fill="none"/>
+            </svg>
+        </button>
+        <h1>Chess Square ID</h1>
+
+        <div id="stats">
+            <div class="stat">
+                <div class="stat-value" id="score-val">0</div>
+                <div class="stat-label">Correct</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="tries-val">0</div>
+                <div class="stat-label">Attempts</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak-val">0</div>
+                <div class="stat-label">Streak</div>
+            </div>
         </div>
 
-        <script>
-            const board = document.getElementById('board');
-            const boardContainer = document.getElementById('board-container');
-            const message = document.getElementById('message');
-            const scoreDisplay = document.getElementById('score');
+        <div id="message-box">Click on: —</div>
 
-            let score = 0;
-            let tries = 0;
-            let targetSquare = '';
+        <div id="board-container">
+            <div class="axis-label">Black</div>
+            <div id="board"></div>
+            <div class="axis-label">White</div>
+        </div>
+
+        <div id="pip-bar"></div>
+
+        <script>
+            const board          = document.getElementById('board');
+            const boardContainer = document.getElementById('board-container');
+            const messageBox     = document.getElementById('message-box');
+            const scoreVal       = document.getElementById('score-val');
+            const triesVal       = document.getElementById('tries-val');
+            const streakVal      = document.getElementById('streak-val');
+            const pipBar         = document.getElementById('pip-bar');
+
+            const PIP_COUNT = 10;
+            let score = 0, tries = 0, streak = 0, targetSquare = '';
+
+            const pips = Array.from({ length: PIP_COUNT }, () => {
+                const p = document.createElement('div');
+                p.className = 'pip';
+                pipBar.appendChild(p);
+                return p;
+            });
 
             function generateBoard() {
                 board.innerHTML = '';
                 for (let row = 8; row >= 1; row--) {
                     for (let col = 0; col < 8; col++) {
-                        const squareName = `${String.fromCharCode(97 + col)}${row}`;
-                        const square = document.createElement('div');
-                        square.className = `square ${(row + col) % 2 ? 'black' : 'white'}`;
+                        const name = `${String.fromCharCode(97 + col)}${row}`;
+                        const sq = document.createElement('div');
+                        sq.className = `square ${(row + col) % 2 ? 'dark' : 'light'}`;
+                        sq.innerText = name;
+                        sq.id = name;
 
-                        square.innerText = squareName;
-                        square.id = squareName;
-
-                        square.addEventListener('mousedown', () =>
-                            square.classList.add('revealed')
-                        );
-
-                        square.addEventListener('mouseup', () =>
-                            square.classList.remove('revealed')
-                        );
-                        square.addEventListener('click', () => checkSquare(squareName));
-                        board.appendChild(square);
+                        sq.addEventListener('mousedown',  () => sq.classList.add('revealed'));
+                        sq.addEventListener('mouseup',    () => sq.classList.remove('revealed'));
+                        sq.addEventListener('mouseleave', () => sq.classList.remove('revealed'));
+                        sq.addEventListener('click', () => checkSquare(name));
+                        board.appendChild(sq);
                     }
                 }
             }
 
             function pickRandomSquare() {
-                const rows = [1, 2, 3, 4, 5, 6, 7, 8];
-                const cols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-                const randomRow = rows[Math.floor(Math.random() * rows.length)];
-                const randomCol = cols[Math.floor(Math.random() * cols.length)];
-                targetSquare = `${randomCol}${randomRow}`;
-                message.textContent = `Click on: ${targetSquare}`;
+                const files = 'abcdefgh';
+                let next;
+                do {
+                    next = `${files[Math.floor(Math.random() * 8)]}${Math.ceil(Math.random() * 8)}`;
+                } while (next === targetSquare);
+                targetSquare = next;
+                messageBox.textContent = `Click on: ${targetSquare}`;
             }
 
-            function checkSquare(selectedSquare) {
+            function flashSquare(el, cls) {
+                el.classList.remove('flash-correct', 'flash-wrong');
+                void el.offsetWidth;
+                el.classList.add(cls);
+                setTimeout(() => el.classList.remove(cls), 500);
+            }
+
+            function checkSquare(selected) {
+                const correct = selected === targetSquare;
                 tries++;
-                if (selectedSquare === targetSquare) {
-                    score++;
-                    scoreDisplay.textContent = `Score: ${score}/${tries}`;
-                    if (tries % 10 === 0) boardContainer.classList.toggle('reversed');
+                streak = correct ? streak + 1 : 0;
+                if (correct) score++;
+
+                scoreVal.textContent  = score;
+                triesVal.textContent  = tries;
+                streakVal.textContent = streak;
+
+                pips[(tries - 1) % PIP_COUNT].className = `pip ${correct ? 'correct' : 'wrong'}`;
+
+                flashSquare(document.getElementById(selected), correct ? 'flash-correct' : 'flash-wrong');
+
+                if (correct) {
+                    if (tries % PIP_COUNT === 0) boardContainer.classList.toggle('reversed');
                     pickRandomSquare();
-                } else {
-                    scoreDisplay.textContent = `Score: ${score}/${tries}`;
                 }
+            }
+
+            const html = document.documentElement;
+            const moon = document.getElementById('icon-moon');
+            const sun  = document.getElementById('icon-sun');
+
+            function applyTheme(dark) {
+                html.classList.toggle('dark', dark);
+                html.classList.toggle('light', !dark);
+                moon.style.display = dark ? 'none' : '';
+                sun.style.display  = dark ? '' : 'none';
+            }
+
+            const stored = localStorage.getItem('theme');
+            const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(stored ? stored === 'dark' : sysDark);
+
+            function toggleTheme() {
+                const isDark = html.classList.contains('dark');
+                applyTheme(!isDark);
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
             }
 
             generateBoard();

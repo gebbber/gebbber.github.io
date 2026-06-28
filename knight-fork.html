@@ -1,496 +1,699 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Knight Fork Trainer</title>
-<style>
-  :root{
-    --bg: #1c2128;
-    --panel: #262c36;
-    --ink: #e8e6e1;
-    --muted: #8b94a3;
-    --light-sq: #e9dcc6;
-    --dark-sq: #7d6347;
-    --accent: #d8a443;
-    --good: #5fb87a;
-    --bad: #d9695f;
-    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-    --mono: "JetBrains Mono", "Courier New", monospace;
-  }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Knight Fork Trainer</title>
+        <style>
+            :root {
+                --bg: #fafafa;
+                --panel: #f4f4f5;
+                --ink: #18181b;
+                --muted: #71717a;
+                --border: #e4e4e7;
+                --btn-hover: #e4e4e7;
+                --board-border: #a09070;
+                --light-sq: #e9dcc6;
+                --dark-sq: #7d6347;
+                --accent: #b87d15;
+                --good: #16a34a;
+                --bad: #dc2626;
+                --serif: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+                --mono: 'JetBrains Mono', 'Courier New', monospace;
+                --toggle: color-mix(in oklch, #1aacc4 50%, black);
+            }
+            :root.dark {
+                --bg: #171717;
+                --panel: #262626;
+                --ink: #fafafa;
+                --muted: #737373;
+                --border: #404040;
+                --btn-hover: #303030;
+                --board-border: #3a2f22;
+                --accent: #d8a443;
+                --good: #5fb87a;
+                --bad: #d9695f;
+                --toggle: color-mix(in oklch, white 50%, #df8020);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root:not(.light) {
+                    --bg: #171717;
+                    --panel: #262626;
+                    --ink: #fafafa;
+                    --muted: #737373;
+                    --border: #404040;
+                    --btn-hover: #303030;
+                    --board-border: #3a2f22;
+                    --accent: #d8a443;
+                    --good: #5fb87a;
+                    --bad: #d9695f;
+                    --toggle: color-mix(in oklch, white 50%, #df8020);
+                }
+            }
 
-  * { box-sizing: border-box; }
+            * {
+                box-sizing: border-box;
+            }
 
-  body{
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--serif);
-    padding: 28px 16px 60px;
-  }
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background: var(--bg);
+                color: var(--ink);
+                font-family: var(--serif);
+                padding: 28px 16px 60px;
+            }
 
-  h1{
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    margin: 0 0 4px;
-    font-size: 1.8rem;
-  }
-  .accent { color: var(--accent); }
+            h1 {
+                font-weight: 600;
+                letter-spacing: 0.04em;
+                margin: 0 0 4px;
+                font-size: 1.8rem;
+            }
+            .accent {
+                color: var(--accent);
+            }
 
-  .subtitle{
-    color: var(--muted);
-    font-size: 0.95rem;
-    margin: 0 0 22px;
-    text-align: center;
-    max-width: 480px;
-    line-height: 1.5;
-  }
+            .subtitle {
+                color: var(--muted);
+                font-size: 0.95rem;
+                margin: 0 0 22px;
+                text-align: center;
+                max-width: 480px;
+                line-height: 1.5;
+            }
 
-  .scoreboard{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 18px;
-    background: var(--panel);
-    border-radius: 10px;
-    padding: 10px 14px;
-    border: 1px solid #3a4150;
-  }
-  .stat{
-    text-align: center;
-    padding: 0 10px;
-    min-width: 58px;
-  }
-  .stat + .stat { border-left: 1px solid #3a4150; }
-  .stat .value{
-    font-family: var(--mono);
-    font-size: 1.35rem;
-    color: var(--accent);
-    line-height: 1.1;
-  }
-  .stat .label{
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    margin-top: 2px;
-  }
+            .scoreboard {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 18px;
+                background: var(--panel);
+                border-radius: 10px;
+                padding: 10px 14px;
+                border: 1px solid var(--border);
+            }
+            .stat {
+                text-align: center;
+                padding: 0 10px;
+                min-width: 58px;
+            }
+            .stat + .stat {
+                border-left: 1px solid var(--border);
+            }
+            .stat .value {
+                font-family: var(--mono);
+                font-size: 1.35rem;
+                color: var(--accent);
+                line-height: 1.1;
+            }
+            .stat .label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                color: var(--muted);
+                margin-top: 2px;
+            }
 
-  .subscoreboard{
-    display: flex;
-    gap: 22px;
-    margin: -6px 0 18px;
-    font-size: 0.8rem;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-  }
-  .subscoreboard .accent{
-    font-family: var(--mono);
-    margin-left: 4px;
-  }
+            .subscoreboard {
+                display: flex;
+                gap: 22px;
+                margin: -6px 0 18px;
+                font-size: 0.8rem;
+                color: var(--muted);
+                letter-spacing: 0.04em;
+            }
+            .subscoreboard .accent {
+                font-family: var(--mono);
+                margin-left: 4px;
+            }
 
-  .board-area{
-    display: flex;
-    align-items: flex-start;
-  }
-  .ranks{
-    display: flex;
-    flex-direction: column;
-  }
-  .ranks div{
-    width: 22px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
-  .board-col{
-    display: flex;
-    flex-direction: column;
-  }
-  .files{
-    display: flex;
-  }
-  .files div{
-    width: 56px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
+            .board-area {
+                display: flex;
+                align-items: flex-start;
+            }
+            .ranks {
+                display: flex;
+                flex-direction: column;
+                padding-top: 2px;
+            }
+            .ranks div {
+                width: 22px;
+                height: 56px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: var(--mono);
+                font-size: 0.8rem;
+                color: var(--muted);
+            }
+            .board-col {
+                display: flex;
+                flex-direction: column;
+            }
+            .files {
+                display: flex;
+                padding-left: 2px;
+            }
+            .files div {
+                width: 56px;
+                height: 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: var(--mono);
+                font-size: 0.8rem;
+                color: var(--muted);
+                text-transform: uppercase;
+            }
 
-  #board{
-    display: grid;
-    grid-template-columns: repeat(8, 56px);
-    grid-template-rows: repeat(8, 56px);
-    border: 4px solid #3a2f22;
-    border-radius: 4px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-    overflow: hidden;
-  }
+            #board {
+                display: grid;
+                grid-template-columns: repeat(8, 56px);
+                grid-template-rows: repeat(8, 56px);
+                border: 2px solid var(--board-border);
+                border-radius: 4px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+                overflow: hidden;
+            }
 
-  .square{
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="16" y="25" font-size="26" text-anchor="middle" fill="white" stroke="black" stroke-width="1.5">&#9816;</text></svg>') 16 16, pointer;
-    position: relative;
-    transition: background-color 0.15s ease;
-  }
-  .square.light { background: var(--light-sq); }
-  .square.dark { background: var(--dark-sq); }
+            .square {
+                width: 56px;
+                height: 56px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor:
+                    url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="16" y="25" font-size="26" text-anchor="middle" fill="white" stroke="black" stroke-width="1.5">&#9816;</text></svg>')
+                        16 16,
+                    pointer;
+                position: relative;
+                transition: background-color 0.15s ease;
+            }
+            .square.light {
+                background: var(--light-sq);
+            }
+            .square.dark {
+                background: var(--dark-sq);
+            }
 
-  .square.correct { background: var(--good) !important; }
-  .square.incorrect { background: var(--bad) !important; }
-  .square.show-correct {
-    box-shadow: inset 0 0 0 4px var(--accent);
-  }
+            .square.correct {
+                background: var(--good) !important;
+            }
+            .square.incorrect {
+                background: var(--bad) !important;
+            }
+            .square.show-correct {
+                box-shadow: inset 0 0 0 4px var(--accent);
+            }
 
-  .piece{
-    font-size: 38px;
-    line-height: 1;
-    user-select: none;
-    pointer-events: none;
-  }
-  .piece-white { color: #fbf6ee; -webkit-text-stroke: 1.5px #2a2a2a; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-  .piece-black { color: #1c1c1c; }
+            .piece {
+                user-select: none;
+                pointer-events: none;
+                display: block;
+                width: 90%;
+                height: 90%;
+            }
+            .piece svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+                fill: #2a2a2a;
+                filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.95));
+            }
 
-  .controls{
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
+            .controls {
+                margin-top: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                width: calc(22px + 8 * 56px + 4px);
+                padding-left: 22px;
+            }
 
-  #skipBtn{
-    font-family: var(--serif);
-    font-size: 1rem;
-    letter-spacing: 0.05em;
-    padding: 12px 36px;
-    border-radius: 8px;
-    border: 1px solid #4a5366;
-    background: var(--panel);
-    color: var(--ink);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-  }
-  #skipBtn:hover { background: #303744; border-color: var(--accent); }
-  #skipBtn.correct { background: var(--good); border-color: var(--good); color: #102015; }
-  #skipBtn.incorrect { background: var(--bad); border-color: var(--bad); }
-  #skipBtn.show-correct { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+            #skipBtn {
+                font-family: var(--serif);
+                font-size: 1rem;
+                letter-spacing: 0.05em;
+                padding: 12px 36px;
+                width: 100%;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background: var(--panel);
+                color: var(--ink);
+                cursor: pointer;
+                transition:
+                    background-color 0.15s ease,
+                    border-color 0.15s ease;
+            }
+            #skipBtn:hover {
+                background: var(--btn-hover);
+                border-color: var(--accent);
+            }
+            #skipBtn.correct {
+                background: var(--good);
+                border-color: var(--good);
+                color: #102015;
+            }
+            #skipBtn.incorrect {
+                background: var(--bad);
+                border-color: var(--bad);
+            }
+            #skipBtn .key {
+                font-family: var(--mono);
+                font-size: 0.78em;
+                background: color-mix(in srgb, var(--ink) 10%, transparent);
+                border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+                border-radius: 4px;
+                padding: 1px 5px;
+                letter-spacing: 0;
+                vertical-align: middle;
+            }
+            #skipBtn.show-correct {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 2px var(--accent);
+            }
 
-  #message{
-    min-height: 1.4em;
-    font-size: 0.95rem;
-    color: var(--muted);
-    text-align: center;
-  }
-  #message.good { color: var(--good); }
-  #message.bad { color: var(--bad); }
+            #message {
+                min-height: 1.4em;
+                font-size: 0.95rem;
+                color: var(--muted);
+                text-align: center;
+            }
+            #message.good {
+                color: var(--good);
+            }
+            #message.bad {
+                color: var(--bad);
+            }
 
-  @media (max-width: 480px){
-    #board{
-      grid-template-columns: repeat(8, 11.5vw);
-      grid-template-rows: repeat(8, 11.5vw);
-    }
-    .square{ width: 11.5vw; height: 11.5vw; }
-    .piece{ font-size: 7.5vw; }
-    .ranks div{ width: 5vw; height: 11.5vw; font-size: 0.7rem; }
-    .files div{ width: 11.5vw; height: 5vw; font-size: 0.7rem; }
-  }
-</style>
-</head>
-<body>
+            #theme-toggle {
+                position: fixed;
+                top: 12px;
+                right: 14px;
+                background: none;
+                border: none;
+                padding: 4px;
+                cursor: pointer;
+                color: var(--toggle);
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-  <h1>Knight Fork <span class="accent">Trainer</span></h1>
-  <p class="subtitle">
-    A king and a queen appear on the board, one of each color. Half the time
-    they're placed so some square forks both of them. Click any square a
-    knight could stand on to attack <em>both</em> pieces &mdash; or hit Skip
-    if no such square exists.
-  </p>
+            @media (max-width: 480px) {
+                #board {
+                    grid-template-columns: repeat(8, 11.5vw);
+                    grid-template-rows: repeat(8, 11.5vw);
+                }
+                .square {
+                    width: 11.5vw;
+                    height: 11.5vw;
+                }
+                .ranks div {
+                    width: 5vw;
+                    height: 11.5vw;
+                    font-size: 0.7rem;
+                }
+                .files div {
+                    width: 11.5vw;
+                    height: 5vw;
+                    font-size: 0.7rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <button id="theme-toggle" title="Toggle dark/light mode" aria-label="Toggle dark/light mode">
+            <svg
+                id="icon-moon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 32 32"
+                fill="currentColor"
+                width="20"
+                height="20">
+                <path
+                    d="M13.5025,5.4136A15.0755,15.0755,0,0,0,25.096,23.6082a11.1134,11.1134,0,0,1-7.9749,3.3893c-.1385,0-.2782.0051-.4178,0A11.0944,11.0944,0,0,1,13.5025,5.4136M14.98,3a1.0024,1.0024,0,0,0-.1746.0156A13.0959,13.0959,0,0,0,16.63,28.9973c.1641.006.3282,0,.4909,0a13.0724,13.0724,0,0,0,10.702-5.5556,1.0094,1.0094,0,0,0-.7833-1.5644A13.08,13.08,0,0,1,15.8892,4.38,1.0149,1.0149,0,0,0,14.98,3Z" />
+                <rect width="32" height="32" fill="none" />
+            </svg>
+            <svg
+                id="icon-sun"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 32 32"
+                fill="currentColor"
+                width="20"
+                height="20"
+                style="display: none">
+                <rect x="15" y="2" width="2" height="5" />
+                <rect
+                    x="21.6675"
+                    y="6.8536"
+                    width="4.958"
+                    height="1.9998"
+                    transform="translate(1.5191 19.3744) rotate(-45)" />
+                <rect x="25" y="15" width="5" height="2" />
+                <rect
+                    x="23.1466"
+                    y="21.6675"
+                    width="1.9998"
+                    height="4.958"
+                    transform="translate(-10.0018 24.1465) rotate(-45)" />
+                <rect x="15" y="25" width="2" height="5" />
+                <rect
+                    x="5.3745"
+                    y="23.1466"
+                    width="4.958"
+                    height="1.9998"
+                    transform="translate(-14.7739 12.6256) rotate(-45)" />
+                <rect x="2" y="15" width="5" height="2" />
+                <rect
+                    x="6.8536"
+                    y="5.3745"
+                    width="1.9998"
+                    height="4.958"
+                    transform="translate(-3.253 7.8535) rotate(-45)" />
+                <path d="M16,12a4,4,0,1,1-4,4,4.0045,4.0045,0,0,1,4-4m0-2a6,6,0,1,0,6,6,6,6,0,0,0-6-6Z" />
+                <rect width="32" height="32" fill="none" />
+            </svg>
+        </button>
 
-  <div class="scoreboard">
-    <div class="stat">
-      <div class="value" id="points">0</div>
-      <div class="label">Points</div>
-    </div>
-    <div class="stat">
-      <div class="value" id="ppm">&ndash;</div>
-      <div class="label">Per Minute</div>
-    </div>
-    <div class="stat">
-      <div class="value" id="streak">0</div>
-      <div class="label">In a Row</div>
-    </div>
-  </div>
+        <h1>Knight Fork <span class="accent">Trainer</span></h1>
+        <p class="subtitle">
+            Click any square a knight could stand on to attack <em>both</em> pieces.<br>
+            Hit Skip if no such square exists.
+        </p>
 
-  <div class="subscoreboard">
-    <span>Forks <span class="accent" id="forks">0/0</span></span>
-    <span>Skips <span class="accent" id="skips">0/0</span></span>
-  </div>
+        <div class="scoreboard">
+            <div class="stat">
+                <div class="value" id="points">0</div>
+                <div class="label">Points</div>
+            </div>
+            <div class="stat">
+                <div class="value" id="ppm">&ndash;</div>
+                <div class="label">Per Minute</div>
+            </div>
+            <div class="stat">
+                <div class="value" id="streak">0</div>
+                <div class="label">In a Row</div>
+            </div>
+        </div>
 
-  <div class="board-area">
-    <div class="ranks" id="ranks">
-      <div>8</div><div>7</div><div>6</div><div>5</div>
-      <div>4</div><div>3</div><div>2</div><div>1</div>
-    </div>
-    <div class="board-col">
-      <div id="board"></div>
-      <div class="files" id="files">
-        <div>a</div><div>b</div><div>c</div><div>d</div>
-        <div>e</div><div>f</div><div>g</div><div>h</div>
-      </div>
-    </div>
-  </div>
+        <div class="subscoreboard">
+            <span>Forks <span class="accent" id="forks">0/0</span></span>
+            <span>Skips <span class="accent" id="skips">0/0</span></span>
+        </div>
 
-  <div class="controls">
-    <button id="skipBtn">No fork (space bar)</button>
-    <div id="message"></div>
-  </div>
+        <div class="board-area">
+            <div class="ranks" id="ranks">
+                <div>8</div>
+                <div>7</div>
+                <div>6</div>
+                <div>5</div>
+                <div>4</div>
+                <div>3</div>
+                <div>2</div>
+                <div>1</div>
+            </div>
+            <div class="board-col">
+                <div id="board"></div>
+                <div class="files" id="files">
+                    <div>a</div>
+                    <div>b</div>
+                    <div>c</div>
+                    <div>d</div>
+                    <div>e</div>
+                    <div>f</div>
+                    <div>g</div>
+                    <div>h</div>
+                </div>
+            </div>
+        </div>
 
-<script>
-  const boardEl = document.getElementById('board');
-  const skipBtn = document.getElementById('skipBtn');
-  const messageEl = document.getElementById('message');
-  const pointsEl = document.getElementById('points');
-  const ppmEl = document.getElementById('ppm');
-  const streakEl = document.getElementById('streak');
-  const forksEl = document.getElementById('forks');
-  const skipsEl = document.getElementById('skips');
+        <div class="controls">
+            <button id="skipBtn">Skip <span class="key">space bar</span></button>
+            <div id="message"></div>
+        </div>
 
-  let totalPoints = 0;
-  let streak = 0;
-  let forkCorrect = 0, forkTotal = 0;
-  let skipCorrect = 0, skipTotal = 0;
-  let startTime = Date.now();
+        <script>
+            const KING_SVG = `<svg viewBox="0 30 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M405.995 477.15h-300v-60h300v60zm-10.3-107.13h-279.4a96.88 96.88 0 0 1 6.65 31.12h266.1a96.88 96.88 0 0 1 6.65-31.12zm-139.7-241.06a35.76 35.76 0 0 0-35.76 35.76c0 50.16 35.76 99.34 35.76 99.34s35.76-49.18 35.76-99.34a35.76 35.76 0 0 0-35.76-35.76zm8-15.38V94.24h18.36v-16h-18.36V54.85h-16v23.39h-18.36v16h18.36v19.38a51.9 51.9 0 0 1 16-.04zm81.64 51.36a98.74 98.74 0 0 0-38.13 7.61c-3.23 51.75-37.07 98.85-38.58 100.93l-4.93 6.76V354h140c16.57-26.15 40.78-42.41 40.78-90a99.13 99.13 0 0 0-99.14-99.07zm-141.16 7.61a99.16 99.16 0 0 0-137.25 91.51c0 47.55 24.21 63.82 40.78 90h139.99v-73.82l-4.94-6.79c-1.51-2.05-35.34-49.15-38.58-100.9z"/></svg>`;
+            const QUEEN_SVG = `<svg viewBox="0 30 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M477.518 181.966a25 25 0 0 1-34.91 23l-62.29 150.26h-248.92l-62.24-150.19a25 25 0 1 1 9.73-7.29l87 71.2 20.92-126.4a25 25 0 1 1 14.7-1.85l54.31 117 54.42-117.3a25 25 0 1 1 14.58 2.08l20.93 126.42 87.26-71.3a25 25 0 1 1 44.51-15.63zm-71.66 241.25h-300v60h300v-60zm-27.75-52h-244.22v36h244.22v-36z"/></svg>`;
 
-  let square1, color1, type1;
-  let square2 = null, color2, type2;
-  let forkSquares = [];
-  let answered = false;
+            const boardEl = document.getElementById('board');
+            const skipBtn = document.getElementById('skipBtn');
+            const messageEl = document.getElementById('message');
+            const pointsEl = document.getElementById('points');
+            const ppmEl = document.getElementById('ppm');
+            const streakEl = document.getElementById('streak');
+            const forksEl = document.getElementById('forks');
+            const skipsEl = document.getElementById('skips');
 
-  const KNIGHT_OFFSETS = [
-    [1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]
-  ];
+            let totalPoints = 0;
+            let streak = 0;
+            let forkCorrect = 0,
+                forkTotal = 0;
+            let skipCorrect = 0,
+                skipTotal = 0;
+            let startTime = Date.now();
 
-  function randInt(n){ return Math.floor(Math.random() * n); }
+            let square1, color1, type1;
+            let square2 = null,
+                color2,
+                type2;
+            let forkSquares = [];
+            let answered = false;
 
-  function knightMoves(idx){
-    const row = Math.floor(idx / 8), col = idx % 8;
-    const moves = [];
-    for(const [dr, dc] of KNIGHT_OFFSETS){
-      const nr = row + dr, nc = col + dc;
-      if(nr >= 0 && nr < 8 && nc >= 0 && nc < 8) moves.push(nr * 8 + nc);
-    }
-    return moves;
-  }
+            const KNIGHT_OFFSETS = [
+                [1, 2],
+                [2, 1],
+                [-1, 2],
+                [-2, 1],
+                [1, -2],
+                [2, -1],
+                [-1, -2],
+                [-2, -1],
+            ];
 
-  const PIECE_CHARS = {
-    K: { white: '\u2654', black: '\u265A' },
-    Q: { white: '\u2655', black: '\u265B' },
-    R: { white: '\u2656', black: '\u265C' },
-    B: { white: '\u2657', black: '\u265D' },
-    N: { white: '\u2658', black: '\u265E' },
-    P: { white: '\u2659', black: '\u265F' }
-  };
+            function randInt(n) {
+                return Math.floor(Math.random() * n);
+            }
 
-  function pieceChar(color, type){
-    return PIECE_CHARS[type][color];
-  }
+            function knightMoves(idx) {
+                const row = Math.floor(idx / 8),
+                    col = idx % 8;
+                const moves = [];
+                for (const [dr, dc] of KNIGHT_OFFSETS) {
+                    const nr = row + dr,
+                        nc = col + dc;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) moves.push(nr * 8 + nc);
+                }
+                return moves;
+            }
 
-  function forkCommon(sqA, sqB){
-    const NA = knightMoves(sqA);
-    const NB = knightMoves(sqB);
-    return NA.filter(x => NB.includes(x) && x !== sqA && x !== sqB);
-  }
+            function forkCommon(sqA, sqB) {
+                const NA = knightMoves(sqA);
+                const NB = knightMoves(sqB);
+                return NA.filter(x => NB.includes(x) && x !== sqA && x !== sqB);
+            }
 
-  function moveSquareRandom(sq, steps){
-    let row = Math.floor(sq / 8), col = sq % 8;
-    for(let i = 0; i < steps; i++){
-      let dr, dc;
-      do {
-        dr = randInt(3) - 1;
-        dc = randInt(3) - 1;
-      } while(dr === 0 && dc === 0);
-      const nr = row + dr, nc = col + dc;
-      if(nr >= 0 && nr < 8 && nc >= 0 && nc < 8){
-        row = nr; col = nc;
-      }
-    }
-    return row * 8 + col;
-  }
+            function moveSquareRandom(sq, steps) {
+                let row = Math.floor(sq / 8),
+                    col = sq % 8;
+                for (let i = 0; i < steps; i++) {
+                    let dr, dc;
+                    do {
+                        dr = randInt(3) - 1;
+                        dc = randInt(3) - 1;
+                    } while (dr === 0 && dc === 0);
+                    const nr = row + dr,
+                        nc = col + dc;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                        row = nr;
+                        col = nc;
+                    }
+                }
+                return row * 8 + col;
+            }
 
-  function generatePuzzle(){
-    const wantFork = Math.random() < 0.5;
+            function generatePuzzle() {
+                const wantFork = Math.random() < 0.5;
 
-    for(let attempt = 0; attempt < 200; attempt++){
-      square1 = randInt(64);
-      color1 = Math.random() < 0.5 ? 'white' : 'black';
-      type1 = Math.random() < 0.5 ? 'K' : 'Q';
+                for (let attempt = 0; attempt < 200; attempt++) {
+                    square1 = randInt(64);
+                    color1 = Math.random() < 0.5 ? 'white' : 'black';
+                    type1 = Math.random() < 0.5 ? 'K' : 'Q';
 
-      const forkableSquares = [];
-      for(let sq = 0; sq < 64; sq++){
-        if(sq === square1) continue;
-        if(forkCommon(square1, sq).length > 0) forkableSquares.push(sq);
-      }
-      if(forkableSquares.length === 0) continue;
+                    const forkableSquares = [];
+                    for (let sq = 0; sq < 64; sq++) {
+                        if (sq === square1) continue;
+                        if (forkCommon(square1, sq).length > 0) forkableSquares.push(sq);
+                    }
+                    if (forkableSquares.length === 0) continue;
 
-      const sq2 = forkableSquares[randInt(forkableSquares.length)];
+                    const sq2 = forkableSquares[randInt(forkableSquares.length)];
 
-      if(wantFork){
-        square2 = sq2;
-        forkSquares = forkCommon(square1, sq2);
-      } else {
-        let s1, s2, common;
-        let iterations = 0;
+                    if (wantFork) {
+                        square2 = sq2;
+                        forkSquares = forkCommon(square1, sq2);
+                    } else {
+                        let s1, s2, common;
+                        let iterations = 0;
 
-        do {
-          iterations++;
-          const steps = randInt(4) + 1;
-          if(Math.random() < 0.5){
-            s1 = moveSquareRandom(square1, steps);
-            s2 = sq2;
-          } else {
-            s1 = square1;
-            s2 = moveSquareRandom(sq2, steps);
-          }
-          common = (s1 === s2) ? forkCommon(square1, sq2) : forkCommon(s1, s2);
-        } while(common.length > 0 && iterations < 500);
+                        do {
+                            iterations++;
+                            const steps = randInt(4) + 1;
+                            if (Math.random() < 0.5) {
+                                s1 = moveSquareRandom(square1, steps);
+                                s2 = sq2;
+                            } else {
+                                s1 = square1;
+                                s2 = moveSquareRandom(sq2, steps);
+                            }
+                            common = s1 === s2 ? forkCommon(square1, sq2) : forkCommon(s1, s2);
+                        } while (common.length > 0 && iterations < 500);
 
-        square1 = s1;
-        square2 = s2;
-        forkSquares = [];
-      }
+                        square1 = s1;
+                        square2 = s2;
+                        forkSquares = [];
+                    }
 
-      color2 = color1 === 'white' ? 'black' : 'white';
-      type2 = type1 === 'K' ? 'Q' : 'K';
-      renderBoard();
-      return;
-    }
-  }
+                    color2 = color1;
+                    type2 = type1 === 'K' ? 'Q' : 'K';
+                    renderBoard();
+                    return;
+                }
+            }
 
-  function renderBoard(){
-    boardEl.innerHTML = '';
+            function renderBoard() {
+                boardEl.innerHTML = '';
 
-    for(let i = 0; i < 64; i++){
-      const row = Math.floor(i / 8), col = i % 8;
-      const cell = document.createElement('div');
-      cell.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
-      cell.dataset.idx = i;
+                for (let i = 0; i < 64; i++) {
+                    const row = Math.floor(i / 8),
+                        col = i % 8;
+                    const cell = document.createElement('div');
+                    cell.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+                    cell.dataset.idx = i;
 
-      if(i === square1){
-        cell.innerHTML = `<span class="piece piece-${color1}">${pieceChar(color1, type1)}</span>`;
-      } else if(i === square2){
-        cell.innerHTML = `<span class="piece piece-${color2}">${pieceChar(color2, type2)}</span>`;
-      }
+                    if (i === square1) {
+                        cell.innerHTML = `<span class="piece">${type1 === 'K' ? KING_SVG : QUEEN_SVG}</span>`;
+                    } else if (i === square2) {
+                        cell.innerHTML = `<span class="piece">${type2 === 'K' ? KING_SVG : QUEEN_SVG}</span>`;
+                    }
 
-      cell.addEventListener('click', () => handleSquareClick(i));
-      boardEl.appendChild(cell);
-    }
-  }
+                    cell.addEventListener('click', () => handleSquareClick(i));
+                    boardEl.appendChild(cell);
+                }
+            }
 
-  function handleSquareClick(idx){
-    if(answered) return;
-    answered = true;
+            function handleSquareClick(idx) {
+                if (answered) return;
 
-    const correct = forkSquares.includes(idx);
-    score(correct, 'fork');
+                const correct = forkSquares.includes(idx);
+                score(correct, 'fork');
 
-    if(!correct){
-      messageEl.textContent = forkSquares.length
-        ? 'Missed a fork.'
-        : 'There was no fork — should have hit Skip.';
-      messageEl.className = 'bad';
-    } else {
-      messageEl.textContent = 'Forked!';
-      messageEl.className = 'good';
-    }
+                if (!correct) {
+                    messageEl.textContent = 'Try again!';
+                    messageEl.className = 'bad';
+                } else {
+                    answered = true;
+                    messageEl.textContent = 'Forked!';
+                    messageEl.className = 'good';
+                    nextPuzzle();
+                }
+            }
 
-    nextPuzzle();
-  }
+            skipBtn.addEventListener('click', () => {
+                if (answered) return;
 
-  skipBtn.addEventListener('click', () => {    if(answered) return;
-    answered = true;
+                const correct = forkSquares.length === 0;
+                score(correct, 'skip');
 
-    const correct = forkSquares.length === 0;
-    score(correct, 'skip');
+                if (!correct) {
+                    messageEl.textContent = 'Try again!';
+                    messageEl.className = 'bad';
+                } else {
+                    answered = true;
+                    messageEl.textContent = 'Correct — no fork available.';
+                    messageEl.className = 'good';
+                    nextPuzzle();
+                }
+            });
 
-    if(!correct){
-      messageEl.textContent = 'There was a fork available.';
-      messageEl.className = 'bad';
-    } else {
-      messageEl.textContent = 'Correct — no fork available.';
-      messageEl.className = 'good';
-    }
+            function score(correct, type) {
+                if (correct) {
+                    totalPoints += 1;
+                    streak += 1;
+                } else {
+                    totalPoints -= 1;
+                    streak = 0;
+                }
 
-    nextPuzzle();
-  });
+                if (type === 'fork') {
+                    forkTotal += 1;
+                    if (correct) forkCorrect += 1;
+                } else {
+                    skipTotal += 1;
+                    if (correct) skipCorrect += 1;
+                }
 
-  function score(correct, type){
-    if(correct){
-      totalPoints += 1;
-      streak += 1;
-    } else {
-      totalPoints -= 1;
-      streak = 0;
-    }
+                updateStats();
+            }
 
-    if(type === 'fork'){
-      forkTotal += 1;
-      if(correct) forkCorrect += 1;
-    } else {
-      skipTotal += 1;
-      if(correct) skipCorrect += 1;
-    }
+            function updateStats() {
+                pointsEl.textContent = totalPoints;
+                streakEl.textContent = streak;
+                forksEl.textContent = `${forkCorrect}/${forkTotal}`;
+                skipsEl.textContent = `${skipCorrect}/${skipTotal}`;
 
-    updateStats();
-  }
+                const elapsedMin = (Date.now() - startTime) / 60000;
+                if (elapsedMin < 0.05) {
+                    ppmEl.textContent = '\u2013';
+                } else {
+                    ppmEl.textContent = (totalPoints / elapsedMin).toFixed(1);
+                }
+            }
 
-  function updateStats(){
-    pointsEl.textContent = totalPoints;
-    streakEl.textContent = streak;
-    forksEl.textContent = `${forkCorrect}/${forkTotal}`;
-    skipsEl.textContent = `${skipCorrect}/${skipTotal}`;
+            function nextPuzzle() {
+                answered = false;
+                skipBtn.classList.remove('correct', 'incorrect', 'show-correct');
+                generatePuzzle();
+            }
 
-    const elapsedMin = (Date.now() - startTime) / 60000;
-    if(elapsedMin < 0.05){
-      ppmEl.textContent = '\u2013';
-    } else {
-      ppmEl.textContent = (totalPoints / elapsedMin).toFixed(1);
-    }
-  }
+            document.addEventListener('keydown', e => {
+                if (e.code === 'Space' || e.key === ' ') {
+                    e.preventDefault();
+                    skipBtn.click();
+                }
+            });
 
-  function nextPuzzle(){
-    answered = false;
-    skipBtn.classList.remove('correct', 'incorrect', 'show-correct');
-    generatePuzzle();
-  }
+            generatePuzzle();
+            updateStats();
+            setInterval(updateStats, 2000);
 
-  document.addEventListener('keydown', (e) => {
-    if(e.code === 'Space' || e.key === ' '){
-      e.preventDefault();
-      skipBtn.click();
-    }
-  });
+            const html = document.documentElement;
+            const moon = document.getElementById('icon-moon');
+            const sun = document.getElementById('icon-sun');
 
-  generatePuzzle();
-  updateStats();
-  setInterval(updateStats, 2000);
-</script>
-</body>
+            function applyTheme(dark) {
+                html.classList.toggle('dark', dark);
+                html.classList.toggle('light', !dark);
+                moon.style.display = dark ? 'none' : '';
+                sun.style.display = dark ? '' : 'none';
+            }
+
+            const stored = localStorage.getItem('theme');
+            applyTheme(stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                const isDark = html.classList.contains('dark');
+                applyTheme(!isDark);
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            });
+        </script>
+    </body>
 </html>

@@ -187,12 +187,24 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                cursor:
-                    url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="16" y="25" font-size="26" text-anchor="middle" fill="white" stroke="black" stroke-width="1.5">&#9816;</text></svg>')
-                        16 16,
-                    pointer;
+                cursor: pointer;
                 position: relative;
                 transition: background-color 0.15s ease;
+            }
+            .square::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background-image: url('pieces/knight.svg');
+                background-size: 75%;
+                background-repeat: no-repeat;
+                background-position: center;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.08s;
+            }
+            .square:not(.occupied):hover::after {
+                opacity: 0.5;
             }
             .square.light {
                 background: var(--light-sq);
@@ -580,8 +592,10 @@
                     cell.dataset.idx = i;
 
                     if (i === square1) {
+                        cell.classList.add('occupied');
                         cell.innerHTML = `<span class="piece">${type1 === 'K' ? KING_SVG : QUEEN_SVG}</span>`;
                     } else if (i === square2) {
+                        cell.classList.add('occupied');
                         cell.innerHTML = `<span class="piece">${type2 === 'K' ? KING_SVG : QUEEN_SVG}</span>`;
                     }
 

@@ -91,18 +91,30 @@
             }
 
             #message-box {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 0 28px;
-                margin-bottom: 20px;
-                font-size: 1.35rem;
-                font-weight: 600;
-                width: 220px;
-                height: 50px;
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                justify-content: center;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                gap: 10px;
+            }
+
+            #message-label {
+                font-size: 0.65rem;
+                font-weight: 300;
+                text-transform: uppercase;
+                letter-spacing: 0.14em;
+                color: var(--text-muted);
+            }
+
+            #message-square {
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 2.6rem;
+                font-weight: 300;
+                line-height: 1;
+                color: var(--text);
+                min-width: 4ch;
+                text-align: center;
             }
 
             #board-container {
@@ -123,6 +135,18 @@
                 letter-spacing: 0.12em;
                 color: var(--text-muted);
                 font-weight: 600;
+            }
+
+            #board-container:not(.reversed) .axis-label:last-child,
+            #board-container.reversed .axis-label:first-child {
+                font-size: 1rem;
+                color: var(--text);
+                letter-spacing: 0.15em;
+            }
+
+            #board-container:not(.reversed) .axis-label:last-child::before,
+            #board-container.reversed .axis-label:first-child::before {
+                content: 'as ';
             }
 
             #board {
@@ -205,7 +229,7 @@
             #pip-bar {
                 display: flex;
                 gap: 5px;
-                margin-top: 14px;
+                margin-top: 10px;
             }
 
             .pip {
@@ -307,12 +331,15 @@
             </div>
         </div>
 
-        <div id="message-box">Click on: —</div>
-
         <div id="board-container">
             <div class="axis-label">Black</div>
             <div id="board"></div>
             <div class="axis-label">White</div>
+        </div>
+
+        <div id="message-box">
+            <div id="message-label">Click on</div>
+            <div id="message-square">—</div>
         </div>
 
         <div id="pip-bar"></div>
@@ -320,7 +347,7 @@
         <script>
             const board = document.getElementById('board');
             const boardContainer = document.getElementById('board-container');
-            const messageBox = document.getElementById('message-box');
+            const messageBox = document.getElementById('message-square');
             const scoreVal = document.getElementById('score-val');
             const triesVal = document.getElementById('tries-val');
             const streakVal = document.getElementById('streak-val');
@@ -370,7 +397,7 @@
                     next = `${files[Math.floor(Math.random() * 8)]}${Math.floor(Math.random() * 8) + 1}`;
                 } while (next === targetSquare);
                 targetSquare = next;
-                messageBox.textContent = `Click on: ${targetSquare}`;
+                messageBox.textContent = targetSquare;
             }
 
             function flashSquare(el, cls) {
@@ -382,6 +409,9 @@
 
             function checkSquare(selected) {
                 const correct = selected === targetSquare;
+                console.log(
+                    `click=${selected} target=${targetSquare} correct=${correct} score=${score} reversed=${boardContainer.classList.contains('reversed')}`,
+                );
                 tries++;
                 streak = correct ? streak + 1 : 0;
                 if (correct) score++;
@@ -394,8 +424,12 @@
 
                 if (correct) {
                     updatePips();
-                    if (score % PIP_COUNT === 0) boardContainer.classList.toggle('reversed');
+                    if (score % PIP_COUNT === 0) {
+                        console.log(`board flip at score=${score}`);
+                        boardContainer.classList.toggle('reversed');
+                    }
                     pickRandomSquare();
+                    console.log(`next target: ${targetSquare}`);
                 }
             }
 
